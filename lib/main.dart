@@ -80,6 +80,7 @@ Future<void> main() async {
 
     // Handle errors outside of Flutter framework
     PlatformDispatcher.instance.onError = (error, stack) {
+      debugPrint('Uncaught error: $error\n$stack');
       if (kReleaseMode) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       }

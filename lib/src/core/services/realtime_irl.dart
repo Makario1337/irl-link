@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get_instance/get_instance.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:get/route_manager.dart';
 import 'package:irllink/src/core/failure.dart';
+import 'package:irllink/src/core/services/background_service.dart';
 import 'package:irllink/src/core/services/talker_service.dart';
 import 'package:irllink/src/core/utils/determine_position.dart';
 import 'package:irllink/src/core/utils/init_dio.dart';
@@ -86,7 +86,7 @@ class RealtimeIrl {
 
   Future<Either<Failure, void>> stopTracking() async {
     try {
-      FlutterForegroundTask.stopService();
+      await Get.find<BackgroundService>().stopLocationSharing();
       status.value = RtIrlStatus.stopped;
       await dioClient.post(
         "/stop?key=$key",

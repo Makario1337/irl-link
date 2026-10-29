@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:irllink/src/core/services/app_info_service.dart';
+import 'package:irllink/src/core/services/background_service.dart';
 import 'package:irllink/src/core/services/deeplinks_service.dart';
 import 'package:irllink/src/core/services/general_settings_service.dart';
 import 'package:irllink/src/core/services/notification_service.dart';
@@ -148,6 +149,11 @@ Future<void> initializeDependencies() async {
     () => SpeakerService(
       getGeneralSettingsUseCase: getGeneralSettingsUseCase,
     ).init(),
+    permanent: true,
+  );
+
+  await Get.putAsync(
+    () => BackgroundService().init(),
     permanent: true,
   );
 }

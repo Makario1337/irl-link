@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- FOREGROUND_SERVICE -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- ACCESS_FINE_LOCATION for Geolocator -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" /> <!-- FOREGROUND_SERVICE_LOCATION for Geolocator -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" /> <!-- Keep chat TTS and sounds running with the screen locked -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> <!-- Foreground service notification -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> <!-- FOR FIREBASE MESSAGING -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/> <!-- FOR FIREBASE MESSAGING -->
     <uses-permission android:name="android.permission.VIBRATE"/> <!-- FOR FIREBASE MESSAGING -->    
@@ -13,6 +15,10 @@
     <uses-permission android:name="android.permission.CAMERA"/> <!-- FOR CAMERA -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" /> <!-- FOR CAMERA -->
     <queries>
+        <!-- Required to see the TTS engines (flutter_tts) since Android 11 -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.BROWSABLE" />
@@ -35,7 +41,8 @@
         android:enableOnBackInvokedCallback="true">
          <service 
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="location"
+            android:foregroundServiceType="location|mediaPlayback"
+            android:stopWithTask="true"
             android:exported="false" 
         />
          <meta-data

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:irllink/src/core/background/tasks_handlers/realtime_irl_task_handler.dart';
+import 'package:irllink/src/core/services/background_service.dart';
 import 'package:irllink/src/core/services/realtime_irl.dart';
 import 'package:irllink/src/core/utils/determine_position.dart';
 import 'package:irllink/src/domain/usecases/settings/get_general_settings.dart';
@@ -20,34 +20,26 @@ class RealtimeIrlViewController extends GetxController
 
   final GetGeneralSettingsUseCase getGeneralSettingsUseCase;
 
-// The callback function should always be a top-level function.
-  @pragma('vm:entry-point')
-  void startCallback() {
-    // The setTaskHandler function must be called to handle the task
-    //in the background.
-    FlutterForegroundTask.setTaskHandler(RealtimeIrlTaskHandler());
-  }
-
   @override
   void onInit() async {
+    String key = '';
     final generalSettingsResult = await getGeneralSettingsUseCase();
     generalSettingsResult.fold(
       (l) {},
       (r) {
-        realtimeIrl.key = r.rtIrlPushKey;
+        key = r.rtIrlPushKey;
       },
     );
 
-    realtimeIrl = RealtimeIrl(realtimeIrl.key);
+    realtimeIrl = RealtimeIrl(key);
 
     FlutterForegroundTask.addTaskDataCallback(realtimeIrl.onReceiveTaskData);
-    _initService();
     super.onInit();
   }
 
   @override
   void onClose() {
-    FlutterForegroundTask.stopService();
+    Get.find<BackgroundService>().stopLocationSharing();
     FlutterForegroundTask.removeTaskDataCallback(realtimeIrl.onReceiveTaskData);
     super.onClose();
   }
@@ -61,41 +53,6 @@ class RealtimeIrlViewController extends GetxController
       start(); // Reconnect to RealtimeIRL service
     } else if (state == AppLifecycleState.paused) {
       // The app is sent to the background
-    }
-  }
-
-  Future<void> _initService() async {
-    FlutterForegroundTask.init(
-      androidNotificationOptions: AndroidNotificationOptions(
-        channelId: 'foreground_service',
-        channelName: 'Foreground Service Notification',
-        channelDescription:
-            'This notification appears when the foreground service is running.',
-      ),
-      iosNotificationOptions: const IOSNotificationOptions(),
-      foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(5000),
-      ),
-    );
-  }
-
-  Future<ServiceRequestResult> _startService() async {
-    if (await FlutterForegroundTask.isRunningService) {
-      return FlutterForegroundTask.restartService();
-    } else {
-      return FlutterForegroundTask.startService(
-        serviceId: 256,
-        notificationTitle: 'IRL Link',
-        notificationText: 'Your location is being shared with RealtimeIRL.',
-        notificationIcon: const NotificationIcon(
-          backgroundColor: Colors.transparent,
-          metaDataName: 'dev.lezd.www.irllink.service.SMALL_ICON',
-        ),
-        notificationButtons: [
-          const NotificationButton(id: 'rtirl_stop', text: 'Stop sharing'),
-        ],
-        callback: startCallback,
-      );
     }
   }
 
@@ -140,7 +97,7 @@ class RealtimeIrlViewController extends GetxController
         );
       },
       (r) {
-        _startService();
+        Get.find<BackgroundService>().startLocationSharing();
       },
     );
   }

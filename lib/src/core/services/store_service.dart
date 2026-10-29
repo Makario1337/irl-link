@@ -59,15 +59,30 @@ class StoreService extends GetxService {
   }
 
   Future<void> getStore() async {
-    final bool available = await InAppPurchase.instance.isAvailable();
+    // The billing service may never answer (e.g. no Play Store account or
+    // app not installed from Play Store), don't block the app startup
+    final bool available = await InAppPurchase.instance.isAvailable().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        talker.warning('Store not available: timeout');
+        return false;
+      },
+    );
     if (available) {
       storeFound.value = true;
     }
   }
 
   Future<void> getStoreProducts() async {
-    final ProductDetailsResponse response =
-        await InAppPurchase.instance.queryProductDetails(kIds);
+    final ProductDetailsResponse response;
+    try {
+      response = await InAppPurchase.instance
+          .queryProductDetails(kIds)
+          .timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      talker.warning('Store products query: timeout');
+      return;
+    }
     if (response.notFoundIDs.isNotEmpty) {
       talker
         ..debug('Products not found: ${response.notFoundIDs}')

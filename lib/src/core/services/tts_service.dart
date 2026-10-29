@@ -57,12 +57,15 @@ class TtsService extends GetxService {
       return;
     }
     // Configure iOS audio so TTS continues when app is in background
+    // or the screen is locked, mixed with other apps (music, ...)
     if (Platform.isIOS) {
+      await flutterTts.setSharedInstance(true);
+      // Don't deactivate the session after speaking, it is shared with the
+      // background keep alive audio (see BackgroundService)
+      await flutterTts.autoStopSharedSession(false);
       await flutterTts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
         [
-          IosTextToSpeechAudioCategoryOptions.allowBluetooth,
-          IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
           IosTextToSpeechAudioCategoryOptions.mixWithOthers,
         ],
       );

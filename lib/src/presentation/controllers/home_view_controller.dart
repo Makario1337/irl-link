@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:irllink/src/core/services/background_service.dart';
 import 'package:irllink/src/core/services/general_settings_service.dart';
 import 'package:irllink/src/core/services/remote_config_service.dart';
 import 'package:irllink/src/core/services/settings_service.dart';
@@ -105,6 +106,9 @@ class HomeViewController extends GetxController
     splitViewController?.weights =
         generalSettings.value?.splitViewWeights ?? [0.5, 0.5];
 
+    // Keep chats, TTS and sounds running when the screen is locked
+    Get.find<BackgroundService>().startKeepAlive();
+
     final remoteConfig = Get.find<RemoteConfigService>();
     minimumVersion.value = io.Platform.isAndroid
         ? await remoteConfig.fetchAndGetString('minimum_version_android')
@@ -203,6 +207,7 @@ class HomeViewController extends GetxController
     debounceSplitResize?.cancel();
     timerRefreshToken?.cancel();
     _settingsSubscription?.cancel();
+    Get.find<BackgroundService>().stopKeepAlive();
     super.onClose();
   }
 
